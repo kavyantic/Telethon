@@ -15,54 +15,48 @@ from accounts import all_admins
 import sqlite3
 
 
+admins = {}
+for admin in all_admins:
+        api_id = admin["api_id"]
+        api_hash = admin["api_hash"]
+        phone = admin["phone"]
+        new_admin = TelegramClient("./sessions/"+phone, api_id, api_hash)         
+        new_admin.connect()
+        if not new_admin.is_user_authorized():
+            new_admin.send_code_request(phone)
+            new_admin.sign_in(phone, input(f'Enter the code for {phone} : '))
+        admins[f'{new_admin.get_me().first_name}'] = new_admin
 
-api_id = all_admins[0]["api_id"]
-api_hash = all_admins[0]["api_hash"]
-phone = all_admins[0]["phone"]    
-main_client = TelegramClient("sessions/"+phone, api_id, api_hash)
-main_client.connect()
-
-
-main_client.connect()
-if not main_client.is_user_authorized():
-    main_client.send_code_request(phone)
-    main_client.sign_in(phone, input('Enter the code: '))
-
-
-users = []
-input_file = './members--tga-signup-now-livandu-com-go-to-livanduchat.csv'
-with open(input_file, encoding='UTF-8') as f:
-        rows = csv.reader(f,delimiter=",",lineterminator="\n")
-        next(rows, None)
-        for row in rows:
-            user = {}
-            user['username'] = row[0]
-            user['name'] = row[3]
-            try:
-                user['id'] = int(row[1])
-                user['access_hash'] = int(row[2])
-            except IndexError:
-                print ('users without id or access_hash')
-            users.append(user)
-
-chats = []
-last_date = None
-chunk_size = 200
-groups=[]
-
-for dialog in main_client.iter_dialogs():
-    # if not dialog.is_group and dialog.is_channel:
-        print(dialog.stringify())
-# 
-# target_group_entity = InputPeerChannel(target_group.id,target_group.access_hash)
+print(admins)
 
 
-# result = main_client(GetDialogsRequest(
-#             offset_date=last_date,
-#             offset_id=0,
-#             offset_peer=InputPeerEmpty(),
-#             limit=chunk_size,
-#             hash = 0
-#         ))
 
-# print(result.stringify())
+all_members_group_list = []
+group_key_list = []
+for admin in admins:
+    chats = []
+    last_date = None
+    chunk_size = 10
+    groups=[]
+
+    result = admins[admin](GetDialogsRequest(
+            offset_date=last_date,
+            offset_id=0,
+            offset_peer=InputPeerEmpty(),
+            limit=chunk_size,
+            hash = 0
+        ))
+    groups_with_id = {str(group.id):group for group in result.chats}
+    group_keys = [group.id for group in result.chats]
+    group_key_list.append(group_keys)
+    all_members_group_list.append(groups_with_id)
+
+# for group in all_members_group_list:
+#     print(group)
+group_id_in_common_list = list(set.intersection(*map(set, all_members_group_list)))
+
+id = "1660268519"
+
+for group in all_members_group_list[0]:
+    if(group in group_id_in_common_list):
+        print(all_members_group_list[0][group].title ," : ",all_members_group_list[0][group].id)

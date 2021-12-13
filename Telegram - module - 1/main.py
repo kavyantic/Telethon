@@ -62,7 +62,7 @@ def add_users_to_group():
         print(f"{idx} - {csv_file}")
 
     
-    input_file = "./" + csvFiles[int(0)]
+    input_file = "./drafted" + csvFiles[int(0)]
     users = []
     with open(input_file, encoding='UTF-8') as f:
         rows = csv.reader(f,delimiter=",",lineterminator="\n")
@@ -134,7 +134,7 @@ def add_users_to_group():
                     continue
                 if mode == 1:
                     if user['username'] == "":
-                        continue
+                        continue 
                     user_to_add = client.get_input_entity(user['username'])
                 elif mode == 2:
                     user_to_add =  InputPeerUser(user['id'], user['access_hash'])
@@ -142,19 +142,24 @@ def add_users_to_group():
                 print(f"Waiting {sleep_time} Seconds...")
                 time.sleep(sleep_time)
             except PeerFloodError:
-                print("Getting Flood Error from telegram. Script is stopping now. Please try again after some time.")
+                print(f"{client.get_me().first_name} : Getting Flood Error from telegram. Script is stopping now. Please try again after some time.")
                 break
             except UserPrivacyRestrictedError:
-                print(f"The user's privacy settings do not allow you to do this. sleeping for {sleep_time} seconds")
+                print(f"{client.get_me().first_name} : The user's privacy settings do not allow you to do this. sleeping for {sleep_time} seconds")
                 time.sleep(sleep_time)
             except tlerr.ChannelInvalidError:
-                print(f"Skipping due to some unknown error. sleeping for {sleep_time} seconds ")
+                print(f"{client.get_me().first_name} : Skipping due to some unknown error. sleeping for {sleep_time} seconds ")
                 time.sleep(sleep_time)
             except BufferError:
-                print("Buffer Error")
+                print(f"{client.get_me().first_name} : Buffer Error")
                 time.sleep(5)
             except tlerr.UserChannelsTooMuchError:
+                print(f"{client.get_me().first_name} : UserChannelsTooMuchError")
                 time.sleep(5)
+            except tlerr.UserIdInvalidError:
+                time.sleep(2)
+                print(f"{client.get_me().first_name} : Buffer  ")
+
             # except :
             #     traceback.print_exc()
             #     print("Unexpected Error")
