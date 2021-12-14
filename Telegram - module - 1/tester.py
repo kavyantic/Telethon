@@ -15,7 +15,7 @@ from accounts import all_admins
 import sqlite3
 
 # Configuration
-id = "1660268519"
+id = "1577351832"
 path = './drafted'
 admin_index =0
 
@@ -118,28 +118,30 @@ with open(csv_file, encoding='UTF-8') as f:
 
 
 admins_length = len(admins)
-min_sleep_time = 60/admins_length
-max_sleep_time = 100/admins_length
+min_sleep_time = 8/admins_length
+# max_sleep_time = 100/admins_length
 key_names = list(admins)
+logf = open("download.log", "w")
+
 
 for idx,user in enumerate(users):
         if user["id"] in my_group_participants_user_id or user['username'] == "" or user['username'][-3:]=="bot":
                     continue
         client_index = (idx+admins_length)%admins_length
         with admins[key_names[client_index]] as client:
-            print(client.get_me().first_name," ",end="")
+            print(key_names[client_index]," ",end="")
             try: 
                 print ("Adding {}".format(user['name']))
-                user_to_add = client.get_input_entity(user['username'])
-                # user_to_add =  InputPeerUser(user['id'], user['access_hash'])
-                # user_to_add =  client.get_entity(user_to_add)/
+                # user_to_add = client.get_input_entity(user['username'])
+                user_to_add =  InputPeerUser(user['id'], user['access_hash'])
+                # user_to_add =  client.get_entity(user_to_add)
 
                 client(InviteToChannelRequest(group_objects_for_admins[key_names[client_index]],[user_to_add]))
                 print(f"Successfull Waiting {min_sleep_time} Seconds...")
                 time.sleep(min_sleep_time)
             except PeerFloodError:
                 print(f"{key_names[client_index]} : Getting Flood Error from telegram. Removing him now now. Please try again after some time.")
-                admins.pop(client_index)
+                admins.pop(key_names[client_index])
             except UserPrivacyRestrictedError:
                 print(f"{key_names[client_index]} : The user's privacy settings do not allow you to do this. sleeping for {min_sleep_time} seconds")
                 time.sleep(min_sleep_time)
@@ -154,8 +156,15 @@ for idx,user in enumerate(users):
                 time.sleep(min_sleep_time)
             except ValueError:
                 continue
-            except tlerr.UserIdInvalidError:
+            except tlerr.UserIdInvalidError: 
                 time.sleep(2)
-                print(f"{key_names[client_index]} : Buffer  ") 
+                print(f"{key_names[client_index]} : User Id is invalid  ") 
             except tlerr.UsernameInvalidError:
+                continue
+            except ConnectionError:
+                input("Network conncetion falid please enter to continue : ")
+                continue
+
+            except Exception as err:
+                logf.write("Failed to add with {0} \n {1}\n\n\n".format(str(key_names[client_index]), str(err)))              
                 continue
